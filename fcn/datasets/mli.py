@@ -34,7 +34,7 @@ class segBase(data.Dataset):
         lbl_file = data_file['lbl']
         lbl = PIL.Image.open(lbl_file)
         lbl = np.array(lbl, dtype=np.int32)
-        lbl[lbl == 255] = 1
+        lbl[lbl == 255] = -1
         if self._transform:
             return self.transform(img, lbl)
         else:
