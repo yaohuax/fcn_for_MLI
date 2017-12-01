@@ -16,7 +16,7 @@ class segBase(data.Dataset):
         self.split = split
         self._transform = transform
         
-        dataset_dir = osp.join(self.root, 'MLI')
+        dataset_dir = osp.join(self.root, 'MLI/images')
         self.file = collections.defaultdict(list)
         
 #        for split in ['train', 'val']:

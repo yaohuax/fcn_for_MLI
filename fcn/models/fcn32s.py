@@ -3,9 +3,82 @@ from torch.autograd import Variable
 import torchvision.models as models
 import numpy as np
 import torch
+#from torch import optim
 import torch.nn as nn
 from PIL import Image
 import torchvision.transforms
+import torch.nn.functional as F
+
+#configurations = {
+#    # same configuration as original fcn32s
+#    1: dict(
+#	max_iteration = 10000,
+#	lr = 1.0e-10,
+#	momentum = 0.99,
+#	weight_decay = 0.0005,
+#	interval_validate = 4000,
+#    )
+#}
+#
+#def get_parameters(model, bias):
+#    std_module = (	
+#        nn.ReLU,
+#        nn.Sequential,
+#        nn.MaxPool2d,
+#        nn.Dropout2d,
+##        fcn.models.FCN32s,
+##        fcn.models.FCN16s,
+##        fcn.models.FCN8s
+#    )
+#    
+#    for m in model.modules():
+#        if isinstance(m, nn.Conv2d):
+#            if bias:
+#                yield m.bias
+#            else:
+#                yield m.weight
+#        elif isinstance(m, nn.ConvTranspose2d):
+#            # weight is frozen because it is just a bilinear upsampling
+#            if bias:
+#                assert m.bias is None
+#        elif isinstance(m, std_module):
+#            continue
+#        else:
+#            raise ValueError('Unexpected module: %s' % str(m))
+#
+#def cross_entropy(input, target, weight=None, size_average=True):
+## input: (n, c, h, w), target: (n, h, w)
+#    n, c, h, w = input.size()
+#    # log_p: (n, c, h, w)
+#    log_p = F.log_softmax(input)
+#    # log_p: (n*h*w, c)
+#    log_p = log_p.transpose(1, 2).transpose(2, 3).contiguous().view(-1, c)
+#    log_p = log_p[target.view(n, h, w, 1).repeat(1, 1, 1, c) >= 0]
+#    log_p = log_p.view(-1, c)
+#    # target: (n*h*w,)
+#    mask = target >= 0
+#    target = target[mask]
+#    loss = F.nll_loss(log_p, target, weight=weight, size_average=False)
+#    if size_average:
+#        loss /= mask.data.sum()
+#    return loss
+#
+#def transform(img, lbl):
+#    mean_bgr = np.array([104.00698793, 116.66876762, 122.67891434])
+#    img = img[:, :, ::-1]  # RGB -> BGR
+#    img = img.astype(np.float64)
+#    img -= mean_bgr
+#    img = img.transpose(2, 0, 1)
+#    img = torch.from_numpy(img).float()
+#    lbl = torch.from_numpy(lbl).long()
+#    return img, lbl
+#
+#def untransform(img):
+#        #img = img.numpy()
+#        img = img.transpose(1, 2, 0)
+#        img = img.astype(np.uint8)
+#        img = img[:, :, ::-1]
+#        return img
 
 def get_upsampling_weight(in_channels, out_channels, kernel_size):
     """
@@ -30,7 +103,7 @@ class FCN32s(nn.Module):
     This Convnet returns a tensor with size[n, n_class, H, W]
     the input size is [n, 3, H, W]
     """
-    def __init__(self, n_class=2):		
+    def __init__(self, n_class=21):		
         super(FCN32s, self).__init__()
         #conv1
         self.conv1_1 = nn.Conv2d(3, 64, 3, padding = 100)
@@ -133,7 +206,7 @@ class FCN32s(nn.Module):
         h = self.score_fr(h)
 
         h = self.upscore(h)
-        print h.data.shape
+        #print h.data.shape
         h = h[:, :, 19:19 + x.size()[2], 19:19 + x.size()[3]].contiguous() 
 
         return h
@@ -171,20 +244,52 @@ class FCN32s(nn.Module):
             l2.weight.data = l1.weight.data.view(l2.weight.size())
             l2.bias.data = l1.bias.data.view(l2.bias.size())
 
-def main():
-    path = '/Users/yaohuaxu/Desktop/hubble_earth.jpg'
-    img = Image.open(path)
-    
-    totensor = torchvision.transforms.ToTensor()
-    img = totensor(img)
-    img = img.view((1,3,842, 1280))
-    img = Variable(img)
-    print img.data.shape
-    net = FCN32s()
-    vgg16 = models.vgg16(pretrained = True)
-    net.copy_params_from_vgg16(vgg16)
-    output = net.forward(img)
-    print output.data.shape
-
-if __name__ == '__main__':
-    main()
+##def main():
+#path = '/Users/yaohuaxu/Desktop/VOCdevkit/VOC2012/JPEGImages/2007_000032.jpg'
+#file = '/Users/yaohuaxu/Desktop/fcn32s_from_caffe.pth'
+#label= '/Users/yaohuaxu/Desktop/VOCdevkit/VOC2012/SegmentationClass/2007_000032.png'
+#img = Image.open(path)
+#img = np.array(img)
+#lbl = Image.open(label)
+#lbl = np.array(lbl, dtype=np.int32)
+#lbl[lbl == 255] = -1
+#img,lbl= transform(img,lbl)
+##print img.shape
+#
+#img = img.view((1,3,281, 500))
+##print img.shape
+#img, lbl = Variable(img), Variable(lbl)
+##print img.data.shape
+#net = FCN32s()
+##num = net.score_fr.in_channels
+##print num
+##vgg16 = models.vgg16(pretrained = True)
+##net.copy_params_from_vgg16(vgg16)
+#cfg = configurations
+#for m in net.modules():
+#    print m
+##optim = torch.optim.SGD(
+##    [
+##        {'params': get_parameters(net, bias=False)},
+##        {'params': get_parameters(net, bias=True),
+##         'lr': cfg[1]['lr'], 'weight_decay': 0},
+##    ],
+##    lr=cfg[1]['lr'],
+##    momentum=cfg[1]['momentum'],
+##    weight_decay=cfg[1]['weight_decay'])
+#
+#net.load_state_dict(torch.load(file))
+##optimization = optim.Adam(net.parameters(), lr = 0.001)
+#output = net.forward(img)
+#loss = cross_entropy(output, lbl)
+#if np.isnan(float(loss.data[0])):
+#    raise ValueError('loss is nan while training')
+#loss.backward()
+#optimization.step()
+#score = output.data.max(1)[1].cpu().numpy()
+#score = untransform(score)
+#print score.shape
+#print output.data.shape
+#
+##if __name__ == '__main__':
+##    main()

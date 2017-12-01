@@ -4,6 +4,7 @@ import torchvision.models as models
 import torch
 import torch.nn as nn
 import fcn
+import trainer
 
 configurations = {
     # same configuration as original fcn32s

@@ -9,8 +9,8 @@ import torch.nn.functional as F
 import tqdm
 
 
-def cross_entropy(input, target, weight=False, size_average=True):
-	# input: (n, c, h, w), target: (n, h, w)
+def cross_entropy(input, target, weight=None, size_average=True):
+# input: (n, c, h, w), target: (n, h, w)
     n, c, h, w = input.size()
     # log_p: (n, c, h, w)
     log_p = F.log_softmax(input)
@@ -27,7 +27,7 @@ def cross_entropy(input, target, weight=False, size_average=True):
     return loss
 
 class Trainer(object):
-    def __init__(self, cuda, model, optimizer, train_loader, val_loader, out, max_iter, size_average = False):
+    def __init__(self, cuda, model, optimizer, train_loader, val_loader, max_iter, size_average = False):
         self.model = model
         self.cuda = cuda
         self.optim = optimizer
@@ -35,9 +35,9 @@ class Trainer(object):
         self.train_loader = train_loader
         self.val_loader = val_loader
         
-        self.out = out
-        if not osp.exist(self.out):
-            os.makedirs(self.out)
+#        self.out = out
+#        if not osp.exist(self.out):
+#            os.makedirs(self.out)
 
         self.size_average = size_average
 
@@ -72,7 +72,7 @@ class Trainer(object):
 
             loss = cross_entropy(score, target, size_average = self.size_average)
 
-            loss = loss / len(data)
+            #loss = loss / len(data)
             if np.isnan(np.float(loss.data[0])):
             	raise ValueError('loss is nan while training')
             loss.backward()
