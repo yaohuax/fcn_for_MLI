@@ -54,11 +54,11 @@ def main():
         [
             {'params': get_parameters(model, bias=False)},
             {'params': get_parameters(model, bias=True),
-             'lr': cfg['lr'] * 2, 'weight_decay': 0},
+             'lr': cfg[1]['lr'] * 2, 'weight_decay': 0},
         ],
-        lr=cfg['lr'],
-        momentum=cfg['momentum'],
-        weight_decay=cfg['weight_decay'])
+        lr=cfg[1]['lr'],
+        momentum=cfg[1]['momentum'],
+        weight_decay=cfg[1]['weight_decay'])
 
 
 
