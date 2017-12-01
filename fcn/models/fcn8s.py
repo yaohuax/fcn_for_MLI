@@ -4,20 +4,19 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-import .fcn32 import get_upsampling_weight
+from .fcn32 import get_upsampling_weight
 
-def FCN8s(nn.Module):
-
-	def __init__(self):
-		super(FCN8s, self).__init__:
+class FCN8s(nn.Module):
+    def __init__(self, n_class = 21):
+        super(FCN8s, self).__init__()
         #conv1
-		self.conv1_1 = nn.Conv2d(3, 64, 3, padding = 100)
-		self.relu1_1 = nn.ReLU(inplace = True)
-		self.conv1_2 = nn.Conv2d(64, 64, padding = 1)
-		self.relu1_2 = nn.ReLU(inplace = True)
-		self.pool1 = nn.MaxPool2d(2, stride=2, ceil_mode=True)
+        self.conv1_1 = nn.Conv2d(3, 64, 3, padding = 100)
+        self.relu1_1 = nn.ReLU(inplace = True)
+        self.conv1_2 = nn.Conv2d(64, 64, 3, padding = 1)
+        self.relu1_2 = nn.ReLU(inplace = True)
+        self.pool1 = nn.MaxPool2d(2, stride=2, ceil_mode=True)
 
-		# conv2
+        # conv2
         self.conv2_1 = nn.Conv2d(64, 128, 3, padding=1)
         self.relu2_1 = nn.ReLU(inplace=True)
         self.conv2_2 = nn.Conv2d(128, 128, 3, padding=1)
