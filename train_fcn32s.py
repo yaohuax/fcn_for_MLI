@@ -3,7 +3,9 @@ import os.path as osp
 import torchvision.models as models
 import torch
 import torch.nn as nn
-import fcn
+import trainer
+# import fcn
+
 
 configurations = {
     # same configuration as original fcn32s
@@ -43,17 +45,20 @@ def get_parameters(model, bias):
             raise ValueError('Unexpected module: %s' % str(m))
 
 def main():
-    model = fcn.models.FCN32s(n_class = 2)
+    file = '/home/lh/cv_ws/src/fcn_for_MLI/fcn32s_from_caffe.pth'
+    model = fcn.models.FCN32s()
+    model.load_state_dict(torch.load(file))
+    num = model.score_fc.out_channels
+    model.score_fc = nn.Conv2d(num, 2, 1)
+    model.upscore = nn.ConvTranspose2d(2,2,64, stride=32,bias=False)
     start_epoch = 0
     start_iteration = 0
-    vgg16 = models.vgg16(pretrained = True)
-    model.copy_params_from_vgg16(vgg16)
     cfg = configurations
     optim = torch.optim.SGD(
         [
             {'params': get_parameters(model, bias=False)},
             {'params': get_parameters(model, bias=True),
-             'lr': cfg['lr'] * 2, 'weight_decay': 0},
+             'lr': cfg[1]['lr'] * 2, 'weight_decay': 0},
         ],
         lr=cfg['lr'],
         momentum=cfg['momentum'],
@@ -61,3 +66,16 @@ def main():
 
 
 
+
+    train_dataloader = torch.utils.data.DataLoader(
+                        ImageList(fileList="/home/lh/cv_ws/src/fcn_for_MLI/train.txt", 
+                        transform=transforms.Compose([ 
+                                transforms.ToTensor(),            ])),
+                        shuffle=False,
+                        num_workers=8,
+                        batch_size=1)
+    for i, data in enumerate(train_dataloader,0):
+        # img, lbl= data
+        trainer = Trainer(cuda=cuda, optimizer=optim, train_loader=train_dataloader, val_loader=train_dataloader,
+                                max_iter = 500)
+        trainer.train()
